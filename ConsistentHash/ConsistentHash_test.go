@@ -1,4 +1,4 @@
-package consistenthashmap
+package consistenthash
 
 import (
 	"strconv"

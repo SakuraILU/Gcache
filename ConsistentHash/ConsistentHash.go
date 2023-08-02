@@ -1,4 +1,4 @@
-package consistenthashmap
+package consistenthash
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ func (c *ConsistentHash) Add(vals ...string) {
 			hash := c.hashfun(fmt.Sprint(i) + val)
 			c.hashs = append(c.hashs, hash)
 			c.hashvals[hash] = val
-			log.Printf("Add key %s into consisitentHash\n", val)
+			log.Printf("Add key %s (hash %v) into consisitentHash\n", val, hash)
 		}
 	}
 
@@ -45,13 +45,13 @@ func (c *ConsistentHash) Get(val interface{}) (elem interface{}, err error) {
 
 	hash := c.hashfun(val)
 	idx := sort.Search(len(c.hashs), func(i int) bool {
-		fmt.Printf("hash: %d, c.hashs[i]: %d\n", hash, c.hashs[i])
 		return c.hashs[i] >= hash
 	})
 
 	// val may be very large...exceed all and == len(c.hashs)
 	// %len(c.hashs) to moveTo the front
 	// idx --> hash --> val
+	// log.Printf("key %v (hash %v) is idx %v\n", val, hash, idx)
 	elem = c.hashvals[c.hashs[idx%len(c.hashs)]]
 
 	return

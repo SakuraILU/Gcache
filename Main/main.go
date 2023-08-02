@@ -2,55 +2,56 @@ package main
 
 import (
 	"fmt"
+	gcache "gcache/Gcache"
 	group "gcache/Group"
+	"log"
 	"net/http"
 )
 
-func main() {
-	// add three groups
-	kvs1 := map[string]string{
-		"Tom":       "cat",
-		"Jerry":     "mouse",
-		"Tom&Jerry": "friend",
+func startServer(name string, addr string, kvs1 map[string]string) {
+	htt_urls := []string{
+		"http://localhost:9999/gcache/",
+		"http://localhost:10000/gcache/",
+		"http://localhost:10001/gcache/",
 	}
+
+	peers := gcache.NewHTTPPool(addr, "/gcache/")
 	var getter1 group.GetFunc = func(key string) ([]byte, error) {
 		if v, ok := kvs1[key]; ok {
 			return []byte(v), nil
 		}
-		return nil, nil
+		return nil, fmt.Errorf("key not found")
 	}
-	group.NewGroup("Tom&Jerry", 1000, getter1)
+	peers.AddGroup(name, 1000, getter1)
+	peers.AddRemotePeers(htt_urls...)
 
-	kvs2 := map[string]string{
-		"apple":  "fruit",
-		"banana": "fruit",
-		"orange": "fruit",
-	}
-	var getter2 group.GetFunc = func(key string) ([]byte, error) {
-		if v, ok := kvs2[key]; ok {
-			return []byte(v), nil
-		}
-		return nil, nil
-	}
-	group.NewGroup("fruit", 1000, getter2)
-
-	kvs3 := map[string]string{
-		"bag":  "thing",
-		"ship": "vehicle",
-		"car":  "vehicle",
-	}
-	var getter3 group.GetFunc = func(key string) ([]byte, error) {
-		if v, ok := kvs3[key]; ok {
-			return []byte(v), nil
-		}
-		return nil, fmt.Errorf("[ERROR] key %s is not exist", key)
-	}
-	group.NewGroup("thing", 1000, getter3)
-
-	addr := "localhost:9999"
-	// add three groups to HTTPPool
-	peers := group.NewHTTPPool(addr, "/gcache/")
-	// serve
 	http.ListenAndServe(addr, peers)
+}
 
+func main() {
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	var addrs []string = []string{
+		"localhost:9999",
+		"localhost:10000",
+		"localhost:10001",
+	}
+
+	kvs := map[string]string{
+		"Tom":              "cat",
+		"Jerry":            "mouse",
+		"Tom&Jerry":        "friend",
+		"bag":              "thing",
+		"ship":             "vehicle",
+		"car":              "vehicle",
+		"apple":            "fruit",
+		"banana":           "fruit",
+		"orange":           "fruit",
+		"1127.0.0.1:10000": "ip",
+	}
+
+	go startServer("thing", addrs[0], kvs)
+	go startServer("thing", addrs[1], kvs)
+	go startServer("thing", addrs[2], kvs)
+
+	select {}
 }

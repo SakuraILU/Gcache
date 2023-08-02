@@ -33,7 +33,6 @@ func (l *LruCache) Add(key string, val Value) {
 	} else {
 		// new key and val
 		e = l.lst.PushFront(entry{key: key, value: val})
-		fmt.Printf("size %d\n", l.lst.Len())
 		l.kvs[key] = e
 		l.curbytes += len(key) + val.Len()
 	}

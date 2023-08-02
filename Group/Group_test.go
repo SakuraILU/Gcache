@@ -22,7 +22,7 @@ func TestGroup1(t *testing.T) {
 	}
 
 	// define a Group
-	g := NewGroup("Tom&Jerry", 1000, getter)
+	g := NewGroup("", 1000, getter, nil)
 
 	// get values from Group
 	for k, v := range kvs {
@@ -48,7 +48,7 @@ func TestGroup2(t *testing.T) {
 		}
 		return nil, nil
 	}
-	g1 := NewGroup("Tom&Jerry", 1000, getter1)
+	g1 := NewGroup("", 1000, getter1, nil)
 
 	// group2
 	kvs2 := map[string]string{
@@ -62,7 +62,7 @@ func TestGroup2(t *testing.T) {
 		}
 		return nil, nil
 	}
-	g2 := NewGroup("fruit", 1000, getter2)
+	g2 := NewGroup("", 1000, getter2, nil)
 
 	// group3
 	kvs3 := map[string]string{
@@ -77,10 +77,9 @@ func TestGroup2(t *testing.T) {
 		}
 		return nil, nil
 	}
-	g3 := NewGroup("thing", 1000, getter3)
+	g3 := NewGroup("", 1000, getter3, nil)
 
 	// get values from Group
-	g1, _ = GetGroup("Tom&Jerry")
 	for k, v := range kvs1 {
 		if val, err := g1.Get(k); err != nil {
 			t.Errorf("[Error]: %v", err)
@@ -89,7 +88,6 @@ func TestGroup2(t *testing.T) {
 		}
 	}
 
-	g2, _ = GetGroup("fruit")
 	for k, v := range kvs2 {
 		if val, err := g2.Get(k); err != nil {
 			t.Errorf("[Error]: %v", err)
@@ -98,7 +96,6 @@ func TestGroup2(t *testing.T) {
 		}
 	}
 
-	g3, _ = GetGroup("thing")
 	for k, v := range kvs3 {
 		if val, err := g3.Get(k); err != nil {
 			t.Errorf("[Error]: %v", err)
