@@ -37,16 +37,16 @@ func main() {
 	}
 
 	kvs := map[string]string{
-		"Tom":              "cat",
-		"Jerry":            "mouse",
-		"Tom&Jerry":        "friend",
-		"bag":              "thing",
-		"ship":             "vehicle",
-		"car":              "vehicle",
-		"apple":            "fruit",
-		"banana":           "fruit",
-		"orange":           "fruit",
-		"1127.0.0.1:10000": "ip",
+		"Tom":       "cat",
+		"Jerry":     "mouse",
+		"Tom&Jerry": "friend",
+		"bag":       "thing",
+		"ship":      "vehicle",
+		"car":       "vehicle",
+		"apple":     "fruit",
+		"banana":    "fruit",
+		"orange":    "fruit",
+		"127.0.0.1": "ip\nefgeda\n\neadaw",
 	}
 
 	go startServer("thing", addrs[0], kvs)

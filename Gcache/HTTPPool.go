@@ -4,11 +4,14 @@ import (
 	"fmt"
 	consistenthash "gcache/ConsistentHash"
 	group "gcache/Group"
+	"gcache/pb"
 	"hash/crc32"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type HTTPPool struct {
@@ -44,7 +47,9 @@ func NewHTTPPool(self, base_path string) *HTTPPool {
 func (h *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err_handle := func(err error) {
 		log.Println(err.Error())
-		w.Write([]byte(err.Error()))
+		data := &pb.Response{Value: []byte(err.Error())}
+		body, err := proto.Marshal(data)
+		w.Write(body)
 	}
 
 	path := r.URL.Path
@@ -68,7 +73,10 @@ func (h *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = w.Write(v.ByteSlice())
+	// marshal data based on protobuf
+	data := &pb.Response{Value: v.ByteSlice()}
+	body, err := proto.Marshal(data)
+	_, err = w.Write(body)
 	if err != nil {
 		err_handle(err)
 		return

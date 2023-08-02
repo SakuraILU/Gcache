@@ -4,7 +4,6 @@ import (
 	"fmt"
 	lru "gcache/Lru"
 	singleflight "gcache/SingleFlight"
-	"time"
 )
 
 type Group struct {
@@ -32,12 +31,12 @@ func (g *Group) Get(key string) (val lru.Value, err error) {
 		return
 	}
 
-	v, err := g.sf.Do(key, func() (v interface{}, err error) {
-		// check wehter gcache has this value?
-		if v, err = g.gcache.get(key); err == nil {
-			return
-		}
+	// check wehter gcache has this value in memory?
+	if val, err = g.gcache.get(key); err == nil {
+		return
+	}
 
+	v, err := g.sf.Do(key, func() (v interface{}, err error) {
 		if v, err = g.loadRemote(key); err == nil {
 			return
 		}
@@ -69,7 +68,6 @@ func (g *Group) loadRemote(key string) (v lru.Value, err error) {
 }
 
 func (g *Group) loadLocal(key string) (v lru.Value, err error) {
-	time.Sleep(10 * time.Second)
 	bytes, err := g.getter.Get(key)
 	if err != nil {
 		return

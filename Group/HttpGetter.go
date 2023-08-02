@@ -2,9 +2,12 @@ package group
 
 import (
 	"fmt"
+	"gcache/pb"
 	"io"
 	"log"
 	"net/http"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type HttpGetter struct {
@@ -34,6 +37,13 @@ func (h *HttpGetter) Get(group, key string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	bytes, err := io.ReadAll(resp.Body)
-	return bytes, err
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body: %v", err)
+	}
+	// unmarshal data based on protobuf
+	out := &pb.Response{}
+	proto.Unmarshal(data, out)
+
+	return out.Value, err
 }
