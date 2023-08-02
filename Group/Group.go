@@ -3,60 +3,53 @@ package group
 import (
 	"fmt"
 	lru "gcache/Lru"
+	singleflight "gcache/SingleFlight"
+	"time"
 )
 
 type Group struct {
 	name       string
 	gcache     *cache
-	getter     Getter
 	peerpicker PeerPicker
+	getter     Getter
+	sf         *singleflight.SinlgeFlight
 }
-
-// var (
-// 	groups map[string]*Group = make(map[string]*Group)
-// 	glk    sync.RWMutex
-// )
 
 func NewGroup(name string, maxbytes int, getter Getter, peerpicker PeerPicker) (g *Group) {
 	g = &Group{
 		name:       name,
 		gcache:     newCache(maxbytes),
-		getter:     getter,
 		peerpicker: peerpicker,
+		getter:     getter,
+		sf:         singleflight.NewSingleFlight(),
 	}
 	return
 }
 
-// func GetGroup(name string) (g *Group, err error) {
-// 	glk.RLock()
-// 	defer glk.RUnlock()
-
-// 	g, ok := groups[name]
-// 	if !ok {
-// 		err = fmt.Errorf("[ERROR] group %s is not exist", name)
-// 	}
-// 	return
-// }
-
-func (g *Group) Get(key string) (v lru.Value, err error) {
+func (g *Group) Get(key string) (val lru.Value, err error) {
 	if key == "" {
 		err = fmt.Errorf("[Error/Group] empty key")
 		return
 	}
 
-	// check wehter gcache has this value?
-	if v, err = g.gcache.get(key); err == nil {
-		return
-	}
+	v, err := g.sf.Do(key, func() (v interface{}, err error) {
+		// check wehter gcache has this value?
+		if v, err = g.gcache.get(key); err == nil {
+			return
+		}
 
-	if v, err = g.loadRemote(key); err == nil {
-		return
-	}
+		if v, err = g.loadRemote(key); err == nil {
+			return
+		}
 
-	if v, err = g.loadLocal(key); err == nil {
-		g.gcache.add(key, v)
+		if v, err = g.loadLocal(key); err == nil {
+			g.gcache.add(key, v.(lru.Value))
+			return v, err
+		}
 		return
-	}
+	})
+
+	val = v.(lru.Value)
 
 	return
 }
@@ -76,6 +69,7 @@ func (g *Group) loadRemote(key string) (v lru.Value, err error) {
 }
 
 func (g *Group) loadLocal(key string) (v lru.Value, err error) {
+	time.Sleep(10 * time.Second)
 	bytes, err := g.getter.Get(key)
 	if err != nil {
 		return
